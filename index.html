@@ -347,19 +347,22 @@ body{
 
 /* Date filter */
 .df-bar{
-  display:flex;align-items:center;gap:10px;flex-wrap:wrap;
-  padding:12px 16px;background:var(--orange-bg);
+  display:grid;
+  grid-template-columns:auto 1fr auto 1fr auto;
+  align-items:center;gap:8px;
+  padding:12px 14px;background:var(--orange-bg);
   border-radius:var(--radius-sm);margin-bottom:16px;
   border:2px solid var(--orange-border)
 }
 .df-bar label{font-size:14px;color:var(--text2);font-weight:600;white-space:nowrap}
 .df-bar input[type=date]{
-  padding:8px 10px;border:2px solid var(--border);border-radius:8px;
-  background:var(--white);color:var(--text);font-size:14px;font-family:inherit
+  padding:9px 8px;border:2px solid var(--border);border-radius:8px;
+  background:var(--white);color:var(--text);font-size:14px;font-family:inherit;
+  width:100%;min-width:0
 }
 .df-bar input[type=date]:focus{outline:none;border-color:var(--orange)}
-.df-sep{font-size:15px;color:var(--text3);font-weight:700}
-.df-result{font-size:13px;color:var(--text3);margin-left:auto;font-weight:600}
+.df-sep{font-size:15px;color:var(--text3);font-weight:700;text-align:center}
+.df-result{font-size:13px;color:var(--text3);font-weight:600;grid-column:1/-1}
 .df-result strong{color:var(--text)}
 
 /* Progress */
@@ -381,6 +384,86 @@ body{
 .add-row{display:flex;gap:8px;align-items:center;margin-top:10px;padding-top:10px;border-top:2px solid var(--orange-bg)}
 .add-row input{flex:1;padding:10px 12px;font-size:14px;border:2px solid var(--border);border-radius:8px;background:var(--white);color:var(--text);font-family:inherit}
 .add-row input:focus{outline:none;border-color:var(--orange)}
+/* 彙整篩選三欄 */
+.sum-filters{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:14px}
+
+/* ===== 手機響應式 ===== */
+@media (max-width: 600px) {
+  body { padding: 0; font-size: 15px; }
+  .wrap { max-width: 100%; }
+
+  /* Header */
+  .ph { padding: 11px 14px; gap: 8px; }
+  .ph h1 { font-size: 14px; }
+  .ph .hd { font-size: 12px; }
+  .logout-btn { padding: 5px 11px; font-size: 12px; }
+
+  /* Tab bar */
+  .tb-bar { padding: 0 6px; gap: 0; }
+  .tb { padding: 12px 8px; font-size: 12px; }
+
+  /* Tab pane */
+  .tp { padding: 14px 12px; }
+
+  /* Form grid → 單欄 */
+  .fgrid { grid-template-columns: 1fr; gap: 10px; }
+
+  /* 彙整日期篩選 → 兩行 */
+  .df-bar {
+    grid-template-columns: auto 1fr auto 1fr;
+    gap: 6px 8px;
+  }
+
+  /* 按鈕列 */
+  .act-bar {
+    flex-direction: column;
+    gap: 8px;
+    align-items: stretch;
+  }
+  .act-bar button {
+    width: 100%;
+    text-align: center;
+    justify-content: center;
+  }
+
+  /* 主要按鈕 */
+  .btn-p { padding: 13px 16px; font-size: 15px; }
+  .btn-g { padding: 12px 16px; font-size: 14px; }
+
+  /* 登入卡 */
+  .login-card { width: 100%; padding: 32px 20px; border-radius: 0; min-height: 100vh; border: none; box-shadow: none; }
+
+  /* Chip 列 */
+  .chip-row { gap: 6px; }
+  .chip { padding: 10px 14px; font-size: 13px; }
+
+  /* 時間選擇器下拉 */
+  .tpw select { font-size: 16px; padding: 10px 6px; min-width: 64px; }
+
+  /* 點檢照片行 */
+  #photo1Area > div, #photo2Area > div, #photo3Area > div {
+    gap: 8px;
+    padding: 6px 0;
+  }
+
+  /* 彙整篩選三欄→單欄 */
+  .sum-filters { grid-template-columns: 1fr !important; gap: 8px; }
+
+  /* 維護月份 4→3 欄 */
+  .month-grid { grid-template-columns: repeat(3,1fr); gap: 6px; }
+  .month-btn { padding: 12px 6px; font-size: 14px; }
+
+  /* 卡片內距 */
+  .card { padding: 12px; }
+  .pcard { padding: 12px; }
+  .rb { padding: 12px; }
+}
+
+/* 小手機追加 */
+@media (max-width: 390px) {
+  .tb { padding: 11px 6px; font-size: 11px; }
+  .btn-p { font-size: 14px; }
+}
 </style>
 </head>
 <body>
@@ -470,7 +553,7 @@ body{
   </div>
   <div class="act-bar">
     <button class="btn-g" onclick="clearBasic()">清除</button>
-    <button class="btn-p" onclick="ST('dispatch',document.querySelectorAll('.tb')[1])">下一步 →</button>
+    <button class="btn-p" onclick="nextStep('basic','dispatch')">下一步 →</button>
   </div>
 </div>
 
@@ -487,7 +570,7 @@ body{
   <div id="personsWrap"></div>
   <div class="act-bar">
     <button class="btn-g" onclick="ST('basic',document.querySelectorAll('.tb')[0])">← 返回</button>
-    <button class="btn-p" onclick="ST('check',document.querySelectorAll('.tb')[2])">下一步 →</button>
+    <button class="btn-p" onclick="nextStep('dispatch','check')">下一步 →</button>
   </div>
 </div>
 
@@ -501,31 +584,65 @@ body{
     <div class="fg"><label>日翊組員 3</label><select id="mem3"><option value="">— 請選擇 —</option></select></div>
   </div>
   <div class="divider"></div>
+
+  <!-- 上傳表單圖檔 -->
   <p class="st">上傳表單（圖檔）</p>
-  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(185px,1fr));gap:12px;margin-bottom:14px" id="ufArea"></div>
+  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(185px,1fr));gap:12px;margin-bottom:16px" id="ufArea"></div>
+
+  <!-- ☁ 儲存至 Google（移入此區，執行後觸發OCR）-->
+  <div style="background:var(--orange-bg);border:2px solid var(--orange-border);border-radius:var(--radius-sm);padding:14px;margin-bottom:14px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px">
+    <div style="font-size:14px;color:var(--text2);font-weight:600">上傳完畢後按此儲存至 Google，並自動辨識封面數值</div>
+    <button class="btn-p green" id="submitBtn" onclick="submitAll()" style="padding:12px 24px;font-size:15px">☁ 儲存至 Google</button>
+  </div>
+
   <div class="divider"></div>
-  <p class="st">上傳倉庫圖（最多 10 張）</p>
-  <div id="whArea"></div>
-  <button class="btn-sm orange" style="margin-bottom:12px" onclick="addWhSlot()" id="whAddBtn">＋ 新增倉庫圖</button>
+
+  <!-- 三類照片上傳，各10張 -->
+  <p class="st">點檢照片上傳</p>
+
+  <!-- 一、過期品照 -->
+  <div class="card" style="margin-bottom:14px">
+    <div class="card-hd">
+      <div class="card-title">一、過期品照（各溫層團體照）</div>
+      <span class="badge bwarn">最多 10 張</span>
+    </div>
+    <div id="photo1Area"></div>
+  </div>
+
+  <!-- 二、標示不清或破損商品 -->
+  <div class="card" style="margin-bottom:14px">
+    <div class="card-hd">
+      <div class="card-title">二、標示不清或破損商品</div>
+      <span class="badge bwarn">最多 10 張</span>
+    </div>
+    <div id="photo2Area"></div>
+  </div>
+
+  <!-- 三、倉庫全景圖 -->
+  <div class="card" style="margin-bottom:14px">
+    <div class="card-hd">
+      <div class="card-title">三、倉庫全景圖</div>
+      <span class="badge bwarn">最多 10 張</span>
+    </div>
+    <div id="photo3Area"></div>
+  </div>
+
   <div class="divider"></div>
+
+  <!-- 查檢回饋事項 -->
   <p class="st">查檢回饋事項</p>
   <div class="rb">
-    <!-- 一、說明 -->
     <div class="rb-lbl">一、查檢回饋說明</div>
     <div class="fg" style="margin-bottom:14px">
       <textarea id="fbNote" rows="3" maxlength="100" placeholder="請填寫查檢回饋說明"
         oninput="document.getElementById('fbCC').textContent=this.value.length+'/100'"></textarea>
       <div class="cc" id="fbCC">0/100</div>
     </div>
-
-    <!-- 物流籃 -->
     <div class="rb-lbl">店舖預留物流籃數量是否 ≥ 15 個</div>
     <div class="chip-row" style="margin-bottom:14px">
       <button class="chip" id="basket_y" onclick="toggleBasket('y')">是</button>
       <button class="chip" id="basket_n" onclick="toggleBasket('n')">否</button>
     </div>
-
-    <!-- 回饋照片 -->
     <div class="rb-lbl">照片（最多 3 張）</div>
     <div class="up-btn-pair">
       <button class="up-btn" onclick="document.getElementById('fbCamInp').click()">📷 拍照</button>
@@ -536,7 +653,7 @@ body{
     <div class="prev-row" id="fbPrev"></div>
   </div>
 
-  <!-- 二、封面紀錄各項數值（OCR 後填入，可手改）-->
+  <!-- 二、封面紀錄各項數值 -->
   <div class="rb" id="ocrValBox">
     <div class="rb-lbl" style="display:flex;align-items:center;justify-content:space-between">
       <span>二、封面紀錄各項數值</span>
@@ -565,9 +682,10 @@ body{
       <div class="fg"><label>件數</label><input type="number" id="ocr_expStoreQty" placeholder="0" min="0"/></div>
     </div>
   </div>
+
   <div class="act-bar">
-    <button class="btn-g" onclick="ST('dispatch',document.querySelectorAll('.tb')[1])">← 返回</button>
-    <button class="btn-p" onclick="ST('summary',document.querySelectorAll('.tb')[3])">預覽彙整 →</button>
+    <button class="btn-g" onclick="nextStep('dispatch','check')">← 返回</button>
+    <button class="btn-p" onclick="nextStep('check','summary')">下一步 →</button>
   </div>
 </div>
 
@@ -585,7 +703,7 @@ body{
   </div>
 
   <!-- 篩選列二：部別、課別、店名 -->
-  <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:14px">
+  <div class="sum-filters">
     <div class="fg">
       <label>盤點部別</label>
       <select id="sumDept" onchange="onSumDept()">
@@ -612,7 +730,6 @@ body{
     <button class="btn-g" onclick="ST('check',document.querySelectorAll('.tb')[2])">← 返回</button>
     <button class="btn-p navy" onclick="exportDispatch()">匯出人派 XLSX</button>
     <button class="btn-p navy" onclick="exportCheck()">匯出點檢 XLSX</button>
-    <button class="btn-p green" id="submitBtn" onclick="submitAll()">☁ 儲存至 Google</button>
   </div>
 </div>
 
@@ -652,6 +769,12 @@ body{
         <div style="font-size:13px;color:var(--text3);font-weight:600;margin-bottom:4px">最後更新</div>
         <div style="font-size:18px;font-weight:700;color:var(--text)" id="leaderLastUpdate">—</div>
       </div>
+    </div>
+
+    <!-- 雲端同步狀態 -->
+    <div style="display:flex;align-items:center;gap:10px;padding:10px 14px;background:var(--orange-bg);border:2px solid var(--orange-border);border-radius:var(--radius-sm);margin-bottom:16px">
+      <span style="font-size:14px;color:var(--text2);font-weight:600;flex:1" id="syncPeopleStatus">點「重新載入」可取得最新雲端資料</span>
+      <button class="btn-sm orange" onclick="reloadPeople()">↻ 重新載入</button>
     </div>
 
     <!-- 選課別 + 新增 -->
@@ -709,7 +832,10 @@ body{
     <!-- 本月應查店舖表格 -->
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
       <div style="font-size:15px;font-weight:700;color:var(--text)" id="shopTableTitle">應查店舖</div>
-      <button class="btn-sm orange" onclick="exportShopList()">匯出</button>
+      <div style="display:flex;gap:8px">
+        <button class="btn-sm orange" onclick="reloadShops()">↻ 重新載入</button>
+        <button class="btn-sm orange" onclick="exportShopList()">匯出</button>
+      </div>
     </div>
     <div style="overflow-x:auto">
       <table class="data-table" id="shopTable">
@@ -802,7 +928,8 @@ const ufDefs = [
 const S = {
   selLeaders:[], selShops:[], selShopNos:[],
   files:{}, whSlots:[], fbImgs:[], pTimes:{},
-  basketVal: null   // 物流籃是否≥15：'y'|'n'|null
+  basketVal: null,
+  photo1:[], photo2:[], photo3:[]   // 三類照片，各最多10張
 };
 
 let selectedMonth = new Date().getMonth() + 1; // 當月
@@ -832,6 +959,10 @@ function doLogin() {
     document.getElementById('dfStart').value = new Date(Date.now()-30*86400000).toISOString().split('T')[0];
     document.getElementById('dfEnd').value = today;
     updateShopMonthLabel();
+
+    // 登入後自動從 Sheets 載入人員與店舖名單
+    loadPeopleFromSheets();
+    loadShopsFromSheets();
   } else {
     err.style.display = 'block';
     document.getElementById('loginPass').value = '';
@@ -854,6 +985,119 @@ function doLogout() {
   document.getElementById('loginUser').focus();
 }
 document.getElementById('loginUser').focus();
+
+/* ===== Google Sheets 人員/店舖同步 ===== */
+
+// 從 Sheets 載入人員名單（登入時自動呼叫）
+async function loadPeopleFromSheets() {
+  if (!WORKER_URL || WORKER_URL.includes('YOUR_')) return;
+  try {
+    const res  = await fetch(WORKER_URL + '?action=loadPeople');
+    const data = await res.json();
+    if (!data.success || !data.people?.length) return;
+
+    // 合併至 CD.people（Sheets 資料覆蓋本地預設值）
+    // 先清空所有課別的 leaders
+    Object.keys(CD.people).forEach(c => { CD.people[c].leaders = []; });
+    data.people.forEach(({course, name}) => {
+      if (!course || !name) return;
+      if (!CD.people[course]) CD.people[course] = { leaders: [] };
+      if (!CD.people[course].leaders.find(l => (l.name||l) === name)) {
+        CD.people[course].leaders.push({ name });
+      }
+    });
+    leaderLastUpdate = new Date().toLocaleDateString('zh-TW',{year:'numeric',month:'2-digit',day:'2-digit'});
+    console.log(`✓ 人員名單已從 Sheets 載入，${data.count} 筆`);
+  } catch (err) {
+    console.warn('人員名單載入失敗（離線模式）:', err.message);
+  }
+}
+
+// 從 Sheets 載入應查店舖（登入時自動呼叫，載入全部月份）
+async function loadShopsFromSheets() {
+  if (!WORKER_URL || WORKER_URL.includes('YOUR_')) return;
+  try {
+    const res  = await fetch(WORKER_URL + '?action=loadShops');
+    const data = await res.json();
+    if (!data.success || !data.shops?.length) return;
+
+    // 完整覆蓋 CD.shops（依月份分組）
+    CD.shops = {};
+    data.shops.forEach(({month, no, name, course, note}) => {
+      if (!month || !name) return;
+      const key = String(month);
+      if (!CD.shops[key]) CD.shops[key] = [];
+      CD.shops[key].push({ no: no||'', name, course: course||'', note: note||'' });
+    });
+    console.log(`✓ 應查店舖已從 Sheets 載入，${data.count} 筆`);
+  } catch (err) {
+    console.warn('應查店舖載入失敗（離線模式）:', err.message);
+  }
+}
+
+// 將人員名單同步至 Sheets（維護專區匯入後呼叫）
+async function syncPeopleToSheets() {
+  if (!WORKER_URL || WORKER_URL.includes('YOUR_')) return;
+  // 把 CD.people 攤平成 [{course, name}]
+  const people = [];
+  Object.entries(CD.people).forEach(([course, data]) => {
+    (data.leaders || []).forEach(l => {
+      const name = l.name || l;
+      if (name) people.push({ course, name });
+    });
+  });
+  try {
+    const res  = await fetch(WORKER_URL, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'savePeople', people })
+    });
+    const data = await res.json();
+    if (data.success) console.log(`✓ 人員名單已同步至 Sheets，${data.count} 筆`);
+    else console.warn('同步失敗:', data.msg);
+    return data.success;
+  } catch (err) {
+    console.warn('人員名單同步失敗:', err.message);
+    return false;
+  }
+}
+
+// 將應查店舖同步至 Sheets（維護專區匯入後呼叫）
+async function syncShopsToSheets() {
+  if (!WORKER_URL || WORKER_URL.includes('YOUR_')) return;
+  // 把 CD.shops 攤平成 [{month, no, name, course, note}]
+  const shops = [];
+  Object.entries(CD.shops).forEach(([month, arr]) => {
+    arr.forEach(s => {
+      if (s.name) shops.push({ month, no: s.no||'', name: s.name, course: s.course||'', note: s.note||'' });
+    });
+  });
+  try {
+    const res  = await fetch(WORKER_URL, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'saveShops', shops })
+    });
+    const data = await res.json();
+    if (data.success) console.log(`✓ 應查店舖已同步至 Sheets，${data.count} 筆`);
+    else console.warn('同步失敗:', data.msg);
+    return data.success;
+  } catch (err) {
+    console.warn('應查店舖同步失敗:', err.message);
+    return false;
+  }
+}
+
+async function reloadPeople() {
+  const el = document.getElementById('syncPeopleStatus');
+  if (el) el.textContent = '載入中…';
+  await loadPeopleFromSheets();
+  if (el) el.textContent = `✓ 已從雲端載入最新資料（${new Date().toLocaleTimeString('zh-TW')}）`;
+  renderPeopleList(); updateTotalLeaderCount();
+}
+
+async function reloadShops() {
+  await loadShopsFromSheets();
+  renderShopTable();
+}
 
 /* ===== 維護專區密碼 ===== */
 function showMaintLock() {
@@ -1062,7 +1306,7 @@ function clearBasic() {
 }
 function clearAll() {
   clearBasic(); S.files = {}; S.whSlots = []; S.fbImgs = [];
-  S.basketVal = null;
+  S.basketVal = null; S.photo1 = []; S.photo2 = []; S.photo3 = [];
   ['basket_y','basket_n'].forEach(id => { const el=document.getElementById(id); if(el) el.className='chip'; });
   ['ocr_start','ocr_end','ocr_sign','ocr_leave','ocr_imminentItems','ocr_imminentQty',
    'ocr_expFloorItems','ocr_expFloorQty','ocr_expStoreItems','ocr_expStoreQty'].forEach(id => {
@@ -1070,6 +1314,57 @@ function clearAll() {
   });
   const st=document.getElementById('ocrStatus'); if(st){st.textContent='';st.style.color='';}
   renderFbPrev();
+}
+
+/* 下一步：自動儲存至 Sheets 後切換 tab */
+async function nextStep(from, to) {
+  const tabs = document.querySelectorAll('.tb-bar:first-of-type .tb');
+  const tabMap = {basic:0, dispatch:1, check:2, summary:3, maint:4};
+  const toIdx = tabMap[to];
+  const toBtn = tabs[toIdx];
+
+  // 返回動作：不存檔
+  if (tabMap[from] > tabMap[to]) {
+    ST(to, toBtn); return;
+  }
+
+  // 前進動作：先存檔
+  if (WORKER_URL && !WORKER_URL.includes('YOUR_')) {
+    try {
+      showProgress('自動存檔中…', '儲存當前資料', 30);
+      const b = getB();
+      if (b.date && b.shops) {
+        const persons = collectPersons();
+        const r = await fetch(WORKER_URL, {
+          method:'POST', headers:{'Content-Type':'application/json'},
+          body: JSON.stringify({action:'saveDispatch', ...b, persons})
+        });
+        const j = await r.json();
+        hideProgress();
+        if (!j.success) console.warn('自動存檔警告:', j.msg);
+      } else { hideProgress(); }
+    } catch(e) { hideProgress(); console.warn('自動存檔失敗:', e.message); }
+  }
+  ST(to, toBtn);
+}
+
+/* 收集人派資料（供 nextStep 和 submitAll 共用）*/
+function collectPersons() {
+  const spdLbl={vf:'很快',f:'佳',n:'普通',s:'慢',vs:'很慢'};
+  const arrLbl={p:'準時',l:'遲到',s:'臨時換人'};
+  return [1,2,3].map(i => {
+    const nm = document.getElementById('pn'+i)?.value; if (!nm) return null;
+    return {
+      name: nm, arrive: S.pTimes['a'+i]||'', depart: S.pTimes['d'+i]||'',
+      arrStatus: arrLbl[getChipVal(i,'arr')]||'（未選）',
+      exp:   getChipVal(i,'exp') ? {y:'有',n:'無'}[getChipVal(i,'exp')] : '（未選）',
+      lunch: getChipVal(i,'lu')  ? {y:'有',n:'無'}[getChipVal(i,'lu')]  : '（未選）',
+      audit: getChipVal(i,'aud') ? {y:'有稽核',n:'無稽核'}[getChipVal(i,'aud')] : '（未選）',
+      miss:  getChipVal(i,'ms')  ? {y:'有漏挑',n:'無漏挑'}[getChipVal(i,'ms')]  : '（未選）',
+      speed: spdLbl[getChipVal(i,'spd')]||'（未選）',
+      feedback: document.getElementById('fb'+i)?.value||''
+    };
+  }).filter(Boolean);
 }
 function clearDF() {
   document.getElementById('dfStart').value  = '';
@@ -1252,8 +1547,7 @@ function buildPersons() {
       {label:'有無挑檢經驗',el: makeChipGroup(i,'exp',['y','n']),     id: null},
       {label:'午休 1 小時', el: makeChipGroup(i,'lu', ['y','n']),     id: null},
       {label:'是否有稽核貨架',el: makeChipGroup(i,'aud',['y','n']),   id: null},
-      {label:'是否有漏挑',  el: makeChipGroup(i,'ms', ['y','n']),     id: `msRow${i}`},
-      {label:'有無複檢（稽核）',el: makeChipGroup(i,'rk',['y','n']), id: null}
+      {label:'是否有漏挑',  el: makeChipGroup(i,'ms', ['y','n']),     id: `msRow${i}`}
     ];
     rows.forEach(({label, el, id}) => {
       const row = document.createElement('div'); row.style.marginBottom='12px';
@@ -1305,6 +1599,7 @@ function buildCheckTab() {
       }
     };
   });
+  // 表單圖檔
   const ua = document.getElementById('ufArea');
   if (!ua.children.length) ufDefs.forEach(({id, label}) => {
     const w = document.createElement('div');
@@ -1318,7 +1613,66 @@ function buildCheckTab() {
 <div id="${id}Prev" class="prev-row"></div>`;
     ua.appendChild(w);
   });
-  if (!document.getElementById('whArea').children.length) addWhSlot();
+  // 三類照片區（各10行）
+  [1,2,3].forEach(n => {
+    const area = document.getElementById(`photo${n}Area`);
+    if (area && !area.children.length) buildPhotoArea(n);
+  });
+}
+
+/* 建立照片分類上傳區（10行） */
+function buildPhotoArea(cat) {
+  const area = document.getElementById(`photo${cat}Area`);
+  if (!area) return;
+  area.innerHTML = '';
+  for (let i = 0; i < 10; i++) {
+    const row = document.createElement('div');
+    row.style.cssText = 'display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1.5px solid var(--orange-bg)';
+    row.id = `photoRow${cat}_${i}`;
+    row.innerHTML = `
+      <span style="font-size:13px;color:var(--text3);width:22px;text-align:right;font-weight:600">${i+1}</span>
+      <div id="photoThumb${cat}_${i}" style="width:52px;height:52px;flex-shrink:0">
+        <div style="width:52px;height:52px;border:2px dashed var(--border);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:11px;color:var(--text3)">空</div>
+      </div>
+      <div style="display:flex;gap:6px;flex:1">
+        <button class="up-btn" style="flex:1;padding:8px" onclick="trigPhoto(${cat},${i},'cam')">📷 拍照</button>
+        <button class="up-btn" style="flex:1;padding:8px" onclick="trigPhoto(${cat},${i},'file')">🖼 圖檔</button>
+      </div>
+      <input type="file" id="photoCam${cat}_${i}"  accept="image/*" capture="environment" style="display:none" onchange="handlePhotoSlot(${cat},${i},this)"/>
+      <input type="file" id="photoFile${cat}_${i}" accept="image/*" style="display:none" onchange="handlePhotoSlot(${cat},${i},this)"/>
+      <button id="photoRm${cat}_${i}" style="display:none;background:var(--orange);color:#fff;border:none;border-radius:50%;width:24px;height:24px;cursor:pointer;font-size:13px;font-weight:700;flex-shrink:0" onclick="clearPhotoSlot(${cat},${i})">×</button>
+    `;
+    area.appendChild(row);
+  }
+  // 初始化陣列
+  if (!S[`photo${cat}`]) S[`photo${cat}`] = [];
+  while (S[`photo${cat}`].length < 10) S[`photo${cat}`].push(null);
+}
+function trigPhoto(cat, i, m) {
+  document.getElementById(`photo${m==='cam'?'Cam':'File'}${cat}_${i}`).click();
+}
+async function handlePhotoSlot(cat, i, inp) {
+  const f = inp.files[0]; if (!f) return;
+  const url = URL.createObjectURL(f);
+  S[`photo${cat}`][i] = {name: f.name, url, file: f};
+  const thumb = document.getElementById(`photoThumb${cat}_${i}`);
+  if (thumb) thumb.innerHTML = `<img src="${url}" style="width:52px;height:52px;object-fit:cover;border-radius:8px;border:2px solid var(--orange-border);cursor:pointer" onclick="openLb('${url}')"/>`;
+  const rm = document.getElementById(`photoRm${cat}_${i}`);
+  if (rm) rm.style.display = 'flex';
+  inp.value = '';
+}
+function clearPhotoSlot(cat, i) {
+  S[`photo${cat}`][i] = null;
+  const thumb = document.getElementById(`photoThumb${cat}_${i}`);
+  if (thumb) thumb.innerHTML = `<div style="width:52px;height:52px;border:2px dashed var(--border);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:11px;color:var(--text3)">空</div>`;
+  const rm = document.getElementById(`photoRm${cat}_${i}`);
+  if (rm) rm.style.display = 'none';
+}
+function getPhotoUrls(cat) {
+  return (S[`photo${cat}`] || []).map(p => p ? p.url : '');
+}
+function getPhotoFiles(cat) {
+  return (S[`photo${cat}`] || []).filter(p => p && p.file).map(p => p.file);
 }
 function trigUf(id, m) { document.getElementById(id+(m==='cam'?'CamInp':'FileInp')).click(); }
 function handleUf(id, inp) {
@@ -1809,6 +2163,7 @@ function addMaintLeader() {
   if(!CD.people[c].leaders.find(l=>(l.name||l)===v)){
     CD.people[c].leaders.push({name:v});
     renderPeopleList(); updateTotalLeaderCount();
+    syncPeopleToSheets();
   }
   document.getElementById('newLeaderInp').value='';
 }
@@ -1817,6 +2172,7 @@ function removeMaintLeader(course, i) {
   if(!CD.people[course]) return;
   CD.people[course].leaders.splice(i,1);
   renderPeopleList(); updateTotalLeaderCount();
+  syncPeopleToSheets();
 }
 
 /* 月份店舖表格 */
@@ -1866,8 +2222,12 @@ function importLeaderXLSX(inp) {
         affected++;
       });
       leaderLastUpdate=new Date().toLocaleDateString('zh-TW',{year:'numeric',month:'2-digit',day:'2-digit'});
-      showStatus('importLeaderStatus','ok',`✓ 已匯入 ${imported} 筆人員（${affected} 個課別）${covered?`，覆蓋舊資料 ${covered} 筆`:''}`);
+      showStatus('importLeaderStatus','ok',`✓ 已匯入 ${imported} 筆人員（${affected} 個課別）${covered?`，覆蓋舊資料 ${covered} 筆`:''}　同步中…`);
       renderPeopleList(); updateTotalLeaderCount();
+      // 同步至 Sheets
+      syncPeopleToSheets().then(ok => {
+        showStatus('importLeaderStatus','ok',`✓ 已匯入 ${imported} 筆${covered?`，覆蓋 ${covered} 筆`:''} ${ok?'　✓ 已同步至雲端':'　⚠ 雲端同步失敗，請稍後重試'}`);
+      });
     }catch(err){showStatus('importLeaderStatus','err','讀取失敗：'+err.message)}
   };
   reader.readAsArrayBuffer(f); inp.value='';
@@ -1896,8 +2256,12 @@ function importShopXLSX(inp) {
       });
       // 強制後蓋前
       CD.shops[key]=[...new Map(newShops.map(s=>[s.name,s])).values()];
-      showStatus('importShopStatus','ok',`✓ 已匯入 ${imported} 筆店舖至 ${selectedMonth} 月${oldCount?`，覆蓋舊資料 ${oldCount} 筆`:''}`);
+      showStatus('importShopStatus','ok',`✓ 已匯入 ${imported} 筆店舖至 ${selectedMonth} 月${oldCount?`，覆蓋舊資料 ${oldCount} 筆`:''}　同步中…`);
       renderShopTable();
+      // 同步至 Sheets
+      syncShopsToSheets().then(ok => {
+        showStatus('importShopStatus','ok',`✓ 已匯入 ${imported} 筆（${selectedMonth} 月）${oldCount?`，覆蓋 ${oldCount} 筆`:''} ${ok?'　✓ 已同步至雲端':'　⚠ 雲端同步失敗，請稍後重試'}`);
+      });
     }catch(err){showStatus('importShopStatus','err','讀取失敗：'+err.message)}
   };
   reader.readAsArrayBuffer(f); inp.value='';
@@ -2028,7 +2392,7 @@ async function uploadAll(fileArr,label,pStart,pEnd) {
 }
 
 async function submitAll() {
-  if(!WORKER_URL||WORKER_URL.includes('YOUR_')){alert('請先在維護專區設定 GAS URL');return}
+  if(!WORKER_URL||WORKER_URL.includes('YOUR_')){alert('請先在維護專區設定 Worker URL');return}
   const btn=document.getElementById('submitBtn'); btn.disabled=true; btn.textContent='上傳中…';
   try{
     const b=getB();
@@ -2036,37 +2400,42 @@ async function submitAll() {
     const uf2F=(S.files['uf2']||[]).map(f=>f.file).filter(Boolean);
     const uf3F=(S.files['uf3']||[]).map(f=>f.file).filter(Boolean);
     const uf4F=(S.files['uf4']||[]).map(f=>f.file).filter(Boolean);
-    const whF=S.whSlots.filter(s=>s.file).map(s=>s.file);
+    const p1F=getPhotoFiles(1), p2F=getPhotoFiles(2), p3F=getPhotoFiles(3);
     const fbF=S.fbImgs.filter(img=>img.file).map(img=>img.file);
     showProgress('準備中','計算上傳數量…',0);
     await new Promise(r=>setTimeout(r,200));
-    let prog=0;
-    const total=uf1F.length+uf2F.length+uf3F.length+uf4F.length+whF.length+fbF.length;
-    const seg=total>0?80/total:80;
+    const total=uf1F.length+uf2F.length+uf3F.length+uf4F.length+p1F.length+p2F.length+p3F.length+fbF.length;
+    const seg=total>0?78/total:78; let prog=0;
+
     const uf1U=uf1F.length?await uploadAll(uf1F,'效期確認書封面',prog,prog+=seg*uf1F.length):(S.files['uf1']||[]).map(f=>f.url).filter(Boolean);
     const uf2U=uf2F.length?await uploadAll(uf2F,'效期確認書LAYOUT',prog,prog+=seg*uf2F.length):(S.files['uf2']||[]).map(f=>f.url).filter(Boolean);
     const uf3U=uf3F.length?await uploadAll(uf3F,'過期明細表',prog,prog+=seg*uf3F.length):(S.files['uf3']||[]).map(f=>f.url).filter(Boolean);
     const uf4U=uf4F.length?await uploadAll(uf4F,'無法登錄清單',prog,prog+=seg*uf4F.length):(S.files['uf4']||[]).map(f=>f.url).filter(Boolean);
-    const whU=whF.length?await uploadAll(whF,'倉庫圖',prog,prog+=seg*whF.length):S.whSlots.filter(s=>s.url).map(s=>s.url);
-    const fbU=fbF.length?await uploadAll(fbF,'回饋照片',prog,prog+=seg*fbF.length):S.fbImgs.filter(img=>img.url).map(img=>img.url);
+
+    const uploadPhotoArr=async(cat,label,ps,pe)=>{
+      const files=getPhotoFiles(cat); const urls=getPhotoUrls(cat);
+      if(!files.length) return urls;
+      const step=files.length>0?(pe-ps)/files.length:0; let pi=0; const result=[...urls];
+      for(let i=0;i<10;i++){
+        if(S[`photo${cat}`][i]?.file){
+          showProgress('上傳照片',`${label} ${i+1}/10`,Math.round(ps+step*pi));
+          try{result[i]=await uploadPhotoToGDrive(S[`photo${cat}`][i].file);}catch{result[i]='';}
+          pi++;
+        }
+      }
+      return result;
+    };
+    const p1U=await uploadPhotoArr(1,'一、過期品照',prog,prog+=seg*p1F.length);
+    const p2U=await uploadPhotoArr(2,'二、標示不清',prog,prog+=seg*p2F.length);
+    const p3U=await uploadPhotoArr(3,'三、倉庫全景圖',prog,prog+=seg*p3F.length);
+    const fbU=fbF.length?await uploadAll(fbF,'回饋照片',prog,prog+=seg*fbF.length):S.fbImgs.map(img=>img.url).filter(Boolean);
+
     showProgress('寫入 Google Sheets','儲存人派記錄…',82);
-    const spdLbl={vf:'很快',f:'佳',n:'普通',s:'慢',vs:'很慢'};
-    const arrLbl={p:'準時',l:'遲到',s:'臨時換人'};
-    const persons=[1,2,3].map(i=>{
-      const nm=document.getElementById('pn'+i)?.value; if(!nm)return null;
-      return{name:nm,arrive:S.pTimes['a'+i]||'',depart:S.pTimes['d'+i]||'',
-        arrStatus:arrLbl[getChipVal(i,'arr')]||'（未選）',
-        exp:getChipVal(i,'exp')?{y:'有',n:'無'}[getChipVal(i,'exp')]:'（未選）',
-        lunch:getChipVal(i,'lu')?{y:'有',n:'無'}[getChipVal(i,'lu')]:'（未選）',
-        audit:getChipVal(i,'aud')?{y:'有稽核',n:'無稽核'}[getChipVal(i,'aud')]:'（未選）',
-        miss:getChipVal(i,'ms')?{y:'有漏挑',n:'無漏挑'}[getChipVal(i,'ms')]:'（未選）',
-        speed:spdLbl[getChipVal(i,'spd')]||'（未選）',
-        recheck:getChipVal(i,'rk')?{y:'有',n:'無'}[getChipVal(i,'rk')]:'（未選）',
-        feedback:document.getElementById('fb'+i)?.value||''};
-    }).filter(Boolean);
+    const persons=collectPersons();
     const r1=await fetch(WORKER_URL,{method:'POST',headers:{'Content-Type':'application/json'},
       body:JSON.stringify({action:'saveDispatch',...b,persons})});
     const j1=await r1.json(); if(!j1.success) throw new Error('人派記錄寫入失敗：'+j1.msg);
+
     showProgress('寫入 Google Sheets','儲存點檢紀錄…',92);
     const ckL=document.getElementById('ckLeader')?.value||b.leaders;
     const mems=[1,2,3].map(i=>document.getElementById('mem'+i)?.value||'').filter(v=>v&&v!=='__o__');
@@ -2074,19 +2443,26 @@ async function submitAll() {
     const r2=await fetch(WORKER_URL,{method:'POST',headers:{'Content-Type':'application/json'},
       body:JSON.stringify({action:'saveCheck',...b,ckLeader:ckL,mems,
         uf1:uf1U.join(', '),uf2:uf2U.join(', '),uf3:uf3U.join(', '),uf4:uf4U.join(', '),
-        whUrls:whU,fbNote:document.getElementById('fbNote')?.value||'',fbUrls:fbU,
-        basket:ocr.basket,
-        startTime:ocr.startTime, endTime:ocr.endTime,
-        signTime:ocr.signTime,   leaveTime:ocr.leaveTime,
-        imminentItems:ocr.imminentItems, imminentQty:ocr.imminentQty,
-        expFloorItems:ocr.expFloorItems, expFloorQty:ocr.expFloorQty,
-        expStoreItems:ocr.expStoreItems, expStoreQty:ocr.expStoreQty})});
+        photo1Urls:p1U,photo2Urls:p2U,photo3Urls:p3U,
+        fbNote:document.getElementById('fbNote')?.value||'',fbUrls:fbU,
+        basket:ocr.basket,startTime:ocr.startTime,endTime:ocr.endTime,
+        signTime:ocr.signTime,leaveTime:ocr.leaveTime,
+        imminentItems:ocr.imminentItems,imminentQty:ocr.imminentQty,
+        expFloorItems:ocr.expFloorItems,expFloorQty:ocr.expFloorQty,
+        expStoreItems:ocr.expStoreItems,expStoreQty:ocr.expStoreQty})});
     const j2=await r2.json(); if(!j2.success) throw new Error('點檢紀錄寫入失敗：'+j2.msg);
+
+    // 儲存後觸發 OCR（若已上傳封面圖）
+    const coverFiles=S.files['uf1'];
+    if(coverFiles&&coverFiles.length>0&&coverFiles[0].file){
+      showProgress('OCR辨識中','自動辨識封面數值…',96);
+      try{await runOCR(coverFiles[0].file);}catch{}
+    }
     showProgress('完成！','資料已成功同步',100);
     await new Promise(r=>setTimeout(r,700)); hideProgress();
     btn.textContent='✓ 已儲存'; btn.style.background='#27500a';
     setTimeout(()=>{btn.textContent='☁ 儲存至 Google';btn.style.background='';btn.disabled=false},3500);
-    alert('✅ 資料已寫入 Google Sheets！\n照片已儲存至 Google Drive。');
+    alert('✅ 資料已寫入 Google Sheets！\n照片已儲存至 Google Drive。\nOCR 辨識結果已填入封面數值欄。');
   }catch(err){
     hideProgress(); btn.textContent='☁ 儲存至 Google'; btn.disabled=false;
     alert('❌ 送出失敗：'+err.message);
@@ -2095,103 +2471,110 @@ async function submitAll() {
 
 /* ===== XLSX 匯出 ===== */
 function getB(){return{dept:document.getElementById('deptSel').value||'',course:getCourse()||'',date:document.getElementById('inspDate').value||'',shops:S.selShops.map((n,i)=>S.selShopNos[i]?`${S.selShopNos[i]} ${n}`:n).join('、'),leaders:S.selLeaders.join('、'),dispCo:document.getElementById('dispCo')?.value||''}}
-/* 強制所有儲存格為純文字，防止 Excel 自動轉換日期/時間 */
-function fText(ws, data) {
-  data.forEach((row, r) => {
-    row.forEach((val, c) => {
-      const addr = XLSX.utils.encode_cell({r, c});
-      if (!ws[addr]) return;
-      ws[addr].t = 's';          // 強制文字型別
-      ws[addr].v = String(val);  // 值也轉字串
-      delete ws[addr].z;         // 移除格式碼
-      delete ws[addr].w;         // 移除快取顯示值
-    });
-  });
-}
+function fText(ws,data){data.forEach((row,r)=>row.forEach((val,c)=>{const a=XLSX.utils.encode_cell({r,c});if(!ws[a])return;ws[a].t='s';ws[a].v=String(val);delete ws[a].z;delete ws[a].w;}))}
+function toStr(v){return v===null||v===undefined?'':String(v)}
 
-/* 確保值為字串（防止數字被轉成數值型）*/
-function toStr(v) { return v === null || v === undefined ? '' : String(v); }
-
-function exportDispatch() {
-  if (typeof XLSX === 'undefined') { alert('XLSX 載入中'); return; }
-  const b = getB();
-  const spdLbl = {vf:'很快', f:'佳', n:'普通', s:'慢', vs:'很慢'};
-  const arrLbl = {p:'準時', l:'遲到', s:'臨時換人'};
-  const hdr = [
-    '店號','填寫店舖全名','帶組人員','日期','派遣廠商別','派遣人員姓名',
+function exportDispatch(){
+  if(typeof XLSX==='undefined'){alert('XLSX 載入中');return}
+  const b=getB();
+  const spdLbl={vf:'很快',f:'佳',n:'普通',s:'慢',vs:'很慢'};
+  const arrLbl={p:'準時',l:'遲到',s:'臨時換人'};
+  const hdr=['店號','填寫店舖全名','帶組人員','日期','派遣廠商別','派遣人員姓名',
     '到店狀況','挑退速度','稽核貨架','漏挑',
     '(上午)簽到時間','(上午)簽退時間','(下午)簽到時間','(下午)簽退時間',
-    '特殊狀況','有無複檢','挑檢經驗','盤點部別','盤點課別'
-  ];
-  const rows = [hdr];
-  [1,2,3].forEach(i => {
-    const nm = document.getElementById('pn'+i)?.value; if (!nm) return;
-    rows.push([
-      toStr(''),
-      toStr(b.shops),   toStr(b.leaders), toStr(b.date),
-      toStr(b.dispCo),  toStr(nm),
-      toStr(arrLbl[getChipVal(i,'arr')] || '（未選）'),
-      toStr(spdLbl[getChipVal(i,'spd')] || '（未選）'),
-      toStr(getChipVal(i,'aud') ? {y:'有稽核',n:'無稽核'}[getChipVal(i,'aud')] : '（未選）'),
-      toStr(getChipVal(i,'ms')  ? {y:'有漏挑',n:'無漏挑'}[getChipVal(i,'ms')]  : '（未選）'),
-      toStr(S.pTimes['a'+i] || ''),
-      toStr('12:00'),
-      toStr('13:00'),
-      toStr(S.pTimes['d'+i] || ''),
-      toStr(document.getElementById('fb'+i)?.value || ''),
-      toStr(getChipVal(i,'rk')  ? {y:'有',n:'無'}[getChipVal(i,'rk')]  : '（未選）'),
-      toStr(getChipVal(i,'exp') ? {y:'有',n:'無'}[getChipVal(i,'exp')] : '（未選）'),
-      toStr(b.dept), toStr(b.course)
-    ]);
+    '特殊狀況','挑檢經驗','盤點部別','盤點課別'];
+  const rows=[hdr];
+  [1,2,3].forEach(i=>{
+    const nm=document.getElementById('pn'+i)?.value; if(!nm)return;
+    rows.push([toStr(''),toStr(b.shops),toStr(b.leaders),toStr(b.date),toStr(b.dispCo),toStr(nm),
+      toStr(arrLbl[getChipVal(i,'arr')]||'（未選）'),toStr(spdLbl[getChipVal(i,'spd')]||'（未選）'),
+      toStr(getChipVal(i,'aud')?{y:'有稽核',n:'無稽核'}[getChipVal(i,'aud')]:'（未選）'),
+      toStr(getChipVal(i,'ms')?{y:'有漏挑',n:'無漏挑'}[getChipVal(i,'ms')]:'（未選）'),
+      toStr(S.pTimes['a'+i]||''),toStr('12:00'),toStr('13:00'),toStr(S.pTimes['d'+i]||''),
+      toStr(document.getElementById('fb'+i)?.value||''),
+      toStr(getChipVal(i,'exp')?{y:'有',n:'無'}[getChipVal(i,'exp')]:'（未選）'),
+      toStr(b.dept),toStr(b.course)]);
   });
-  const wb = XLSX.utils.book_new();
-  const ws = XLSX.utils.aoa_to_sheet(rows);
-  fText(ws, rows);
-  ws['!cols'] = hdr.map(() => ({wch: 15}));
-  XLSX.utils.book_append_sheet(wb, ws, '派遣人員簽到表');
-  XLSX.writeFile(wb, `派遣簽到_${b.date || '未指定'}.xlsx`);
+  const wb=XLSX.utils.book_new(),ws=XLSX.utils.aoa_to_sheet(rows);
+  fText(ws,rows);ws['!cols']=hdr.map(()=>({wch:15}));
+  XLSX.utils.book_append_sheet(wb,ws,'派遣人員簽到表');
+  XLSX.writeFile(wb,`派遣簽到_${b.date||'未指定'}.xlsx`);
 }
 
-function exportCheck() {
-  if (typeof XLSX === 'undefined') { alert('XLSX 載入中'); return; }
-  const b   = getB();
-  const ckL = document.getElementById('ckLeader')?.value || b.leaders;
-  const mems = [1,2,3].map(i => document.getElementById('mem'+i)?.value || '').filter(v => v && v !== '__o__');
-  const uf = id => (S.files[id] || []).map(f => f.url).join(', ');
-  const ocr = getOcrVals();
-  const hdr = [
-    '店鋪名稱','點檢日期','點檢組長','日翊組員1','日翊組員2','日翊組員3',
-    '效期確認書封面','效期確認書LAYOUT','過期明細表','無法登錄清單',
-    '倉庫全景照','查檢回饋說明','回饋照片',
-    '盤點部別','盤點課別',
-    '開始時間','結束時間','文件簽核時間','人員離店時間',
-    '物流籃≥15','即期品品項數','即期品件數',
-    '過期品賣場品項數','過期品賣場件數',
-    '過期品倉庫品項數','過期品倉庫件數'
+/* 匯出點檢紀錄（依 xlsx 範本格式）*/
+function exportCheck(){
+  if(typeof XLSX==='undefined'){alert('XLSX 載入中');return}
+  const b=getB();
+  const ckL=document.getElementById('ckLeader')?.value||b.leaders;
+  const mems=[1,2,3,4].map(i=>{
+    const el=document.getElementById('mem'+i); return el?el.value||'':'';
+  });
+  const uf=id=>(S.files[id]||[]).map(f=>f.url).filter(Boolean).join(', ');
+  const ocr=getOcrVals();
+
+  // 照片欄：各10欄，空位補空字串
+  const phArr=cat=>{
+    const arr=getPhotoUrls(cat);
+    while(arr.length<10) arr.push('');
+    return arr.slice(0,10);
+  };
+  const p1=phArr(1), p2=phArr(2), p3=phArr(3);
+
+  // 回饋照片（最多3張）
+  const fbUrls=S.fbImgs.map(img=>img.url||'');
+  while(fbUrls.length<3) fbUrls.push('');
+
+  const hdr=[
+    '店舖名稱','點檢日期(請填西元年)','點檢組長姓名',
+    '日翊組員姓名','日翊組員姓名','日翊組員姓名','日翊組員姓名',
+    '點檢開始時間(從前置作業開始算)','點檢結束時間(到EOB登錄結束時間)',
+    '文件簽核時間','人員離店時間',
+    '店鋪預留物流籃數量大於等於15個',
+    '即期品-品項數合計','即期品-件數合計',
+    '【過期品】賣場品項數','【過期品】賣場件數',
+    '【過期品】倉庫品項數','【過期品】倉庫件數',
+    // 一、過期品照（×10）
+    ...Array.from({length:10},(_,i)=>`【 過期品照(各溫層團體照)  】照片上傳${i+1}`),
+    // 二、標示不清（×10）
+    ...Array.from({length:10},(_,i)=>`【標示不清或破損商品】  照片上傳${i>0?i+1:''}`),
+    // 表單圖檔（4種）
+    '【店舖商品效期檢查確認書紙本封面】照片上傳',
+    '【店舖商品效期檢查確認書紙本LAYOUT】照片上傳',
+    '【全家過期品明細表】照片上傳',
+    '【無法登錄商品資料表】照片上傳',
+    // 三、倉庫全景圖（×10）
+    ...Array.from({length:10},(_,i)=>`【店鋪倉庫&WI全景照】照片上傳${i>0?i+1:''}`),
+    '過/即期品 TOP30商品是否已確實下架',
+    '是否有"針對店鋪"建議事項',
+    '點檢人員"針對店鋪"建議事項',
+    '【 "針對店鋪"建議事項  】照片上傳'
   ];
-  const row = [
-    toStr(b.shops),     toStr(b.date),   toStr(ckL),
-    toStr(mems[0]||''), toStr(mems[1]||''), toStr(mems[2]||''),
-    toStr(uf('uf1')),   toStr(uf('uf2')), toStr(uf('uf3')), toStr(uf('uf4')),
-    toStr(S.whSlots.filter(s=>s.url).map(s=>s.url).join(', ')),
-    toStr(document.getElementById('fbNote')?.value || ''),
-    toStr(S.fbImgs.map(img => img.url).join(', ')),
-    toStr(b.dept), toStr(b.course),
-    toStr(ocr.startTime),     toStr(ocr.endTime),
-    toStr(ocr.signTime),      toStr(ocr.leaveTime),
+
+  const row=[
+    toStr(b.shops), toStr(b.date), toStr(ckL),
+    toStr(mems[0]), toStr(mems[1]), toStr(mems[2]), toStr(mems[3]),
+    toStr(ocr.startTime), toStr(ocr.endTime),
+    toStr(ocr.signTime),  toStr(ocr.leaveTime),
     toStr(ocr.basket),
     toStr(ocr.imminentItems), toStr(ocr.imminentQty),
     toStr(ocr.expFloorItems), toStr(ocr.expFloorQty),
-    toStr(ocr.expStoreItems), toStr(ocr.expStoreQty)
+    toStr(ocr.expStoreItems), toStr(ocr.expStoreQty),
+    ...p1.map(toStr),
+    ...p2.map(toStr),
+    toStr(uf('uf1')), toStr(uf('uf2')), toStr(uf('uf3')), toStr(uf('uf4')),
+    ...p3.map(toStr),
+    toStr(''), toStr(''),
+    toStr(document.getElementById('fbNote')?.value||''),
+    toStr(fbUrls.join(', '))
   ];
-  const data = [hdr, row];
-  const wb = XLSX.utils.book_new();
-  const ws = XLSX.utils.aoa_to_sheet(data);
-  fText(ws, data);
-  ws['!cols'] = hdr.map(() => ({wch: 20}));
-  XLSX.utils.book_append_sheet(wb, ws, '商品效期檢核');
-  XLSX.writeFile(wb, `點檢紀錄_${b.date || '未指定'}.xlsx`);
+
+  const data=[hdr,row];
+  const wb=XLSX.utils.book_new(),ws=XLSX.utils.aoa_to_sheet(data);
+  fText(ws,data);ws['!cols']=hdr.map(()=>({wch:22}));
+  XLSX.utils.book_append_sheet(wb,ws,'已完成');
+  XLSX.writeFile(wb,`點檢紀錄_${b.date||'未指定'}.xlsx`);
 }
+
 
 buildPersons();
 updateShopMonthLabel();
